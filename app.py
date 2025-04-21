@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, jsonify, url_for, redirect, abort
 import os
 import numpy as np
-import onnxruntime as rt
+import pickle
+# import cv2
+# from PIL import Image
 import io
 import sys
 
@@ -16,8 +18,8 @@ def load_models():
     global models_loaded, model_error_message
     
     # Check if model files exist
-    test_model_path = 'models/best_xgboost_model.onnx'
-    pixel_model_path = 'models/pixels_best_xgboost_model.onnx'
+    test_model_path = 'models/best_xgboost_model.pkl'
+    pixel_model_path = 'models/pixels_best_xgboost_model.pkl'
     
     if not os.path.exists(test_model_path):
         model_error_message = f"Test data model not found at {test_model_path}"
@@ -28,12 +30,13 @@ def load_models():
         return None, None
     
     try:
-        # Load ONNX models
-        print(f"Loading test data model from {test_model_path}")
-        test_data_model = rt.InferenceSession(test_model_path)
+        # Load Test Data Model
+        with open(test_model_path, 'rb') as f:
+            test_data_model = pickle.load(f)
         
-        print(f"Loading pixel data model from {pixel_model_path}")
-        pixel_data_model = rt.InferenceSession(pixel_model_path)
+        # Load Pixel Data Model
+        with open(pixel_model_path, 'rb') as f:
+            pixel_data_model = pickle.load(f)
         
         # Set flag to indicate models are loaded
         models_loaded = True
@@ -85,32 +88,23 @@ def predict_test_data():
     MCH = float(data.get('mch', 0))
     MCHC = float(data.get('mchc', 0))
     
-    print(f"Form Data Received: gender={Gender}, age={Age}, Hb={Hb}, RBC={RBC}, PCV={PCV}, MCV={MCV}, MCH={MCH}, MHCH={MCHC}")
+    print(f"Form Data Recieved: gender={Gender}, age={Age}, Hb={Hb}, RBC={RBC}, PCV={PCV}, MCV={MCV}, MCH={MCH}, MHCH={MCHC}")
     
     try:
-        # Prepare input for ONNX model
-        input_data = np.array([[Gender, Age, Hb, RBC, PCV, MCV, MCH, MCHC]], dtype=np.float32)
+        # Prepare input for model
+        input_data = np.array([[Gender, Age, Hb, RBC, PCV, MCV, MCH, MCHC]])
         print(f"Model Input Data: {input_data}")
-        
-        # Get input and output names
-        input_name = test_data_model.get_inputs()[0].name
-        output_names = [output.name for output in test_data_model.get_outputs()]
-        label_name = output_names[0]  # First output is typically the prediction
-        
-        # Make prediction using the ONNX model
+        # Make prediction using the model
+        # Get prediction
         print("Attempting Prediction")
-        outputs = test_data_model.run(output_names, {input_name: input_data})
-        prediction = int(outputs[0][0])  # Convert to int for consistency
+        prediction = test_data_model.predict(input_data)[0]
         print(f"Prediction Result: {prediction}")
+        # Get prediction probability
+        prediction_proba = test_data_model.predict_proba(input_data)[0]
+        confidence = int(max(prediction_proba) * 100)
         
-        # Get prediction probability if available
-        confidence = 85  # Default confidence
-        if len(output_names) > 1:
-            # Assuming second output contains probabilities
-            prediction_proba = outputs[1][0]
-            confidence = int(max(prediction_proba) * 100)
-            print(f"Prediction probabilities: {prediction_proba}")
-            print(f"Confidence: {confidence}")
+        print(f"Prediction probabilities: {prediction_proba}")
+        print(f"Confidence: {confidence}")
         
         # Generate details based on prediction
         gender_text = "male" if Gender == 1 else "female"
@@ -121,7 +115,7 @@ def predict_test_data():
         
         # Return prediction result
         return jsonify({
-            'prediction': prediction,
+            'prediction': int(prediction),
             'confidence': confidence,
             'details': details
         })
@@ -167,39 +161,38 @@ def predict_pixel_data():
                 'error': f'Invalid input data: {str(e)}'
             }), 400
         
-        # Prepare input for ONNX model
-        input_data = np.array([[gender, red_pixel, green_pixel, blue_pixel, hemoglobin]], dtype=np.float32)
+        # Prepare input for model
+        input_data = np.array([[gender, red_pixel, green_pixel, blue_pixel, hemoglobin]])
         print(f"Model input data: {input_data}")
         
-        # Get input and output names
-        input_name = pixel_data_model.get_inputs()[0].name
-        output_names = [output.name for output in pixel_data_model.get_outputs()]
-        label_name = output_names[0]  # First output is typically the prediction
-        
-        # Make prediction using the ONNX model
+        # Make prediction using the model
         try:
             print("Attempting model prediction")
-            outputs = pixel_data_model.run(output_names, {input_name: input_data})
-            prediction = int(outputs[0][0])  # Convert to int for consistency
+            prediction = pixel_data_model.predict(input_data)[0]
             print(f"Model prediction result: {prediction}")  # This returns either 1 or 0
             
             # Convert numeric prediction to Yes/No for frontend
             prediction_text = "Yes" if prediction == 1 else "No"
             
             # Try to get prediction probability
-            confidence = 85  # Default confidence
-            if len(output_names) > 1:
-                # Assuming second output contains probabilities
-                prediction_proba = outputs[1][0]
+            try:
+                prediction_proba = pixel_data_model.predict_proba(input_data)[0]
+                print(f"Prediction probabilities: {prediction_proba}")
+                
+                # For binary classification, index 1 typically represents the positive class (1)
+                # and index 0 represents the negative class (0)
                 if len(prediction_proba) > 1:
                     # If we have probabilities for both classes, use the one matching our prediction
-                    confidence = int(prediction_proba[prediction] * 100)
+                    confidence = int(prediction_proba[int(prediction)] * 100)
                 else:
                     # If we only have one probability, use it directly
                     confidence = int(prediction_proba[0] * 100)
                 
-                print(f"Prediction probabilities: {prediction_proba}")
                 print(f"Calculated confidence: {confidence}%")
+            except Exception as proba_error:
+                print(f"Error getting prediction probability: {proba_error}")
+                confidence = 85  # Default confidence if model doesn't provide probabilities
+                print(f"Using default confidence: {confidence}%")
                 
         except Exception as model_error:
             print(f"Model prediction error: {model_error}")
@@ -257,12 +250,14 @@ def server_error(e):
     return jsonify({'error': 'Internal server error'}), 500
 
 
+
+
 if __name__ == '__main__':
     # Create models directory if it doesn't exist
     if not os.path.exists('models'):
         os.makedirs('models')
         print("Created 'models' directory. Please place your trained models in this directory.")
-        print("Expected model files: 'models/best_xgboost_model.onnx' and 'models/pixels_best_xgboost_model.onnx'")
+        print("Expected model files: 'models/test_data_model.pkl' and 'models/pixel_data_model.pkl'")
     
     # Create error template if it doesn't exist
     if not os.path.exists('templates/error.html'):
@@ -274,8 +269,8 @@ if __name__ == '__main__':
         print("ERROR: Models not loaded properly!")
         print(model_error_message)
         print("\nPlease ensure the following model files exist:")
-        print("- models/best_xgboost_model.onnx")
-        print("- models/pixels_best_xgboost_model.onnx")
+        print("- models/test_data_model.pkl")
+        print("- models/pixel_data_model.pkl")
         print("\nThe application will run, but prediction functionality will be disabled.")
         print("="*80 + "\n")
     else:
@@ -294,4 +289,5 @@ if __name__ == '__main__':
         print(f"Warning: Static directory not found at {static_dir}")
     
     # Run the app
+    # app.run(debug=True, host='0.0.0.0', port=5000)
     app.run(debug=True)
