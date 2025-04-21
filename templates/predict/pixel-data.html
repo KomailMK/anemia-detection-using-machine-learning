@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anemia Prediction | Pixel Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .optional-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px dashed var(--card-border);
+            border-radius: 10px;
+            background-color: rgba(10, 15, 30, 0.4);
+        }
+        .optional-label {
+            display: inline-block;
+            background-color: var(--accent);
+            color: var(--bg-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+        .note-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-background">
+        <div class="grid"></div>
+    </div>
+
+    <header>
+        <nav>
+            <div class="logo">ANEMIA<span class="accent">AI</span></div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('test_data') }}">Test Data</a></li>
+                <li><a href="{{ url_for('pixel_data') }}" class="active">Pixel Data</a></li>
+                <li><a href="{{ url_for('home') }}#about">About</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="page-header animate-on-scroll">
+            <div class="container">
+                <h1>Predict Using <span class="accent">Pixel Data</span></h1>
+                <p>Enter RGB pixel percentages and hemoglobin level for analysis</p>
+            </div>
+        </section>
+
+        <section class="prediction-form animate-on-scroll">
+            <div class="container">
+                <form id="pixelDataForm">
+                    <div class="optional-section">
+                        <span class="optional-label">Optional</span>
+                        <div class="upload-container">
+                            <div class="upload-area" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h3>Drag & Drop Image</h3>
+                                <p>or</p>
+                                <label for="imageUpload" class="upload-btn">Browse Files</label>
+                                <input type="file" id="imageUpload" name="imageUpload" accept="image/*" hidden>
+                                <p class="file-info">Supported formats: JPG, PNG, TIFF</p>
+                                <p class="note-text">Image is for visualization only and not used in prediction</p>
+                            </div>
+                            <div class="image-preview" id="imagePreview">
+                                <img id="previewImg" src="#" alt="Preview">
+                                <button type="button" class="remove-btn" id="removeImage"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="1">Male</option>
+                                <option value="0">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="red_pixel">% Red Pixel</label>
+                            <input type="number" id="red_pixel" name="red_pixel" step="0.01" min="0" max="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="green_pixel">% Green Pixel</label>
+                            <input type="number" id="green_pixel" name="green_pixel" step="0.01" min="0" max="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="blue_pixel">% Blue Pixel</label>
+                            <input type="number" id="blue_pixel" name="blue_pixel" step="0.01" min="0" max="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="hemoglobin">Hemoglobin Level (g/dL)</label>
+                            <input type="number" id="hemoglobin" name="hemoglobin" step="0.1" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="neon-button predict-btn">Analyze <i class="fas fa-microscope"></i></button>
+                </form>
+            </div>
+        </section>
+
+        <section class="results-section" id="results">
+            <div class="container">
+                <div class="results-card">
+                    <h2>Analysis <span class="accent">Results</span></h2>
+                    <div class="result-content">
+                        <div class="result-indicator">
+                            <div class="indicator-circle">
+                                <span id="prediction-value">?</span>
+                            </div>
+                        </div>
+                        <div class="result-details">
+                            <h3 id="prediction-text">Awaiting Analysis</h3>
+                            <p id="prediction-description">Enter pixel data to see results.</p>
+                            <div class="confidence-bar">
+                                <div class="confidence-label">Confidence:</div>
+                                <div class="confidence-track">
+                                    <div class="confidence-fill" id="confidence-level"></div>
+                                </div>
+                                <div class="confidence-value" id="confidence-value">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cell-analysis" id="cellAnalysis">
+                        <h3>Cell Analysis</h3>
+                        <div class="analysis-grid">
+                            <div class="analysis-item">
+                                <div class="analysis-label">RBC Morphology:</div>
+                                <div class="analysis-value" id="rbc-morphology">-</div>
+                            </div>
+                            <div class="analysis-item">
+                                <div class="analysis-label">Cell Size Variation:</div>
+                                <div class="analysis-value" id="cell-size">-</div>
+                            </div>
+                            <div class="analysis-item">
+                                <div class="analysis-label">Hemoglobin Distribution:</div>
+                                <div class="analysis-value" id="hemoglobin-dist">-</div>
+                            </div>
+                            <div class="analysis-item">
+                                <div class="analysis-label">Cell Count:</div>
+                                <div class="analysis-value" id="cell-count">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">ANEMIA<span class="accent">AI</span></div>
+                <p>Advanced AI-powered anemia prediction and analysis</p>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 AnemiaAI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pixel-data.js') }}"></script>
+</body>
+</html>

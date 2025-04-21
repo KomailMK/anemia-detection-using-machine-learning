@@ -1,0 +1,80 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Anemia Prediction | Error</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </head>
+    <body>
+        <div class="grid-background">
+            <div class="grid"></div>
+        </div>
+
+        <header>
+            <nav>
+                <div class="logo">ANEMIA<span class="accent">AI</span></div>
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('test_data') }}">Test Data</a></li>
+                    <li><a href="{{ url_for('pixel_data') }}">Pixel Data</a></li>
+                </ul>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <section class="page-header animate-on-scroll">
+                <div class="container">
+                    <h1>Error <span class="accent">Loading Models</span></h1>
+                    <p>There was a problem loading the prediction models</p>
+                </div>
+            </section>
+
+            <section class="prediction-form animate-on-scroll">
+                <div class="container">
+                    <div class="results-card">
+                        <h2>Error <span class="accent">Details</span></h2>
+                        <div class="result-content">
+                            <div class="result-indicator">
+                                <div class="indicator-circle" style="border-color: var(--danger); box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);">
+                                    <span style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i></span>
+                                </div>
+                            </div>
+                            <div class="result-details">
+                                <h3>Model Loading Failed</h3>
+                                <p>{{ error_message }}</p>
+                                <p>Please make sure the model files are placed in the correct location:</p>
+                                <ul style="text-align: left; margin: 20px 0; list-style-type: none;">
+                                    <li><i class="fas fa-file-code"></i> models/test_data_model.pkl</li>
+                                    <li><i class="fas fa-file-code"></i> models/pixel_data_model.pkl</li>
+                                </ul>
+                                <a href="{{ url_for('home') }}" class="neon-button">Return Home <i class="fas fa-home"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="container">
+                <div class="footer-content">
+                    <div class="logo">ANEMIA<span class="accent">AI</span></div>
+                    <p>Advanced AI-powered anemia prediction and analysis</p>
+                </div>
+                <div class="copyright">
+                    <p>&copy; 2025 AnemiaAI. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+        <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    </body>
+    </html>
+
