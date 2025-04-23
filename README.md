@@ -15,7 +15,7 @@ This project uses machine learning and deep learning models for prediction, inte
 -  Uses SVM, Random Forest, Logistic Regression, XGBoost, and deep learning models
 -  Deep learning models built using TensorFlow/Keras
 -  Modular structure for easy deployment and scalability
--  Access it here: https://anemia-prediction-using-ml-io.vercel.app/
+-  Access it here: https://mycodespaceio.pythonanywhere.com/
 
 ---
 
