@@ -42,8 +42,8 @@ This project uses machine learning and deep learning models for prediction, inte
 1. **Clone the Repository**
 
 ```bash
-  git clone https://github.com/yourusername/anemiax.git
-  cd anemia_detection_with_ML
+  git clone https://github.com/yourusername_here/anemia-detection-using-machine-learning.git
+  cd anemia-detection-using-machine-learning
 ```
 
 2. **Create a Virtual Environment**
