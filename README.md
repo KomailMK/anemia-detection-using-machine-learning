@@ -33,7 +33,7 @@ This project uses machine learning and deep learning models for prediction, inte
 - **Clinical Test Data**: Includes features like Hemoglobin, Hematocrit, MCV, MCH, etc.
 - **Image Data**: Converted image pixel data to RGB percentages to use as input for prediction
 
-> Note: Due to data sensitivity, dummy data is used for demo purposes.
+> Note: Models are still under active development as we're still collecting data.
 
 ---
 
